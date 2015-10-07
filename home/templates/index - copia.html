@@ -1,0 +1,114 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html lang="es">
+<head>
+    <title>Rutas</title>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+         <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+         <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css">
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+
+        <script src="http://maps.google.com/maps/api/js?sensor=false"></script>
+        <script src="{{ STATIC_URL }}libs/basemap.js"></script>
+
+        <style>
+            .smallmap {
+             width: 100%;
+             height: 550px;
+            }
+        </style>
+
+        <script>
+
+function refresca(){
+
+    $.getJSON('/rutas/puntos', function(data){
+        markers.clearMarkers();
+        $(data).each(function() {
+          //  alert(data);
+           markerJS=new OpenLayers.Marker(new OpenLayers.LonLat(this.fields.lon,this.fields.lat).transform('EPSG:4326', 'EPSG:3857'),icon.clone());
+           markers.addMarker(markerJS);
+           markerJS.icon.imageDiv.title = this.fields.nombre;
+        });
+
+        });
+}
+
+function rutas(){
+
+    $.getJSON('/rutas/rutas', function(data){
+        codigo="";
+        codigo=codigo+"<button type='button' class='btn btn-default'><a href='#' onclick='refresca();'>Todos</a></button>&nbsp;";
+        $(data).each(function() {
+          codigo=codigo+"<button type='button' class='btn btn-default'><a href='#' onclick='refrescaruta("+this.pk+");'>"+this.fields.nombre+"</a></button>&nbsp;";
+        });
+        $("#rutas").html(codigo);
+
+        });
+}
+
+
+function refrescapunto(idpunto){
+
+    $.getJSON('/rutas/punto?id='+idpunto, function(data){
+        $(data).each(function() {
+           markerJS=new OpenLayers.Marker(new OpenLayers.LonLat(this.fields.lon,this.fields.lat).transform('EPSG:4326', 'EPSG:3857'),icon.clone());
+           markers.addMarker(markerJS);
+           markerJS.icon.imageDiv.title = this.fields.nombre;
+        });
+
+        });
+}
+
+function refrescaruta(idpunto){
+
+    $.getJSON('/rutas/puntoruta?id='+idpunto, function(data){
+        markers.clearMarkers();
+        $(data).each(function() {
+           markerJS=new OpenLayers.Marker(new OpenLayers.LonLat(this.fields.lon,this.fields.lat).transform('EPSG:4326', 'EPSG:3857'),icon.clone());
+           markers.addMarker(markerJS);
+           markerJS.icon.imageDiv.title = this.fields.nombre;
+        });
+
+        });
+}
+
+
+$( document ).ready(function() {
+    refresca();
+    rutas();
+// $( "#envia" ).hide();
+ //$( "#localiza" ).hide();
+ //$( "#nombred" ).hide();
+
+    $( "#envia" ).click(function() {
+        $.ajax({
+             type: "POST",
+             url: "/rutas/puntoadd/",
+             data: { nombre: $("#nombre").val(), lon: vlon, lat: vlat, tipo:"P",
+             'csrfmiddlewaretoken': '{{ csrf_token }}'},
+             success: function( data ) {
+                 refrescapunto(data.id);
+             },
+             dataType: "json"});
+    });
+});
+
+        </script>
+</head>
+    <body onload="init()">
+        <div id="rutas" class="btn-group"></div>
+        <div id="map" class="smallmap"></div>
+<div id="nombred">
+        Nombre: <input type="text" id="nombre" ></div>
+        <div id="localiza" ></div>
+        <button id='envia'>Agregar</button>
+</body>
+</html>

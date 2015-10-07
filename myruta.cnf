@@ -1,0 +1,6 @@
+#myruta.cnf
+[client]
+database = cds
+user = cds
+password = cds
+default-character-set = utf8
